@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 import mlflow
 from mlflow.models import infer_signature
 import mlflow.sklearn
+from dotenv import load_dotenv
+load_dotenv()
 
 import logging
 logging.basicConfig(level=logging.WARN)
@@ -45,6 +47,14 @@ if __name__=="__main__":
 
     alpha=float(sys.argv[1]) if len(sys.argv)>1 else 0.5
     l1_ratio=float(sys.argv[2]) if len(sys.argv)>2 else 0.5
+    remote_server_uri=os.environ.get("MLFLOW_TRACKING_URI")
+    if remote_server_uri:
+        os.environ["MLFLOW_TRACKING_PASSWORD"]=os.environ.get("MLFLOW_TRACKING_PASSWORD","")
+        os.environ["MLFLOW_TRACKING_USERNAME"]=os.environ.get("MLFLOW_TRACKING_USERNAME","")
+        mlflow.set_tracking_uri(remote_server_uri)
+    else:
+        print("Using local server")
+
 
     with mlflow.start_run():
         lr=ElasticNet(alpha=alpha,l1_ratio=l1_ratio,random_state=42)
@@ -72,7 +82,7 @@ if __name__=="__main__":
 
         if tracking_url_type_score!="file":
             mlflow.sklearn.log_model(
-                lr,"model",registered_model_name="ElasticNetWineModel",signature=signature
+                lr,"model",signature=signature
             )
         else:
             mlflow.sklearn.log_model(lr,"model",signature=signature)
