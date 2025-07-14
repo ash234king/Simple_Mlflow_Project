@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import mlflow
 from mlflow.models import infer_signature
 import mlflow.sklearn
+import shutil
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -79,11 +80,7 @@ if __name__=="__main__":
         signature=infer_signature(train_x,predictions)
 
         tracking_url_type_score=urlparse(mlflow.get_tracking_uri()).scheme
-
-        if tracking_url_type_score!="file":
-            mlflow.sklearn.log_model(
-                lr,"model",signature=signature
-            )
-        else:
-            mlflow.sklearn.log_model(lr,"model",signature=signature)
+        mlflow.sklearn.save_model(lr, "model")
+        mlflow.log_artifacts("model", artifact_path="model")
+        shutil.rmtree("model")
             
